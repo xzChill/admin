@@ -6,8 +6,10 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using SqlMigration.Models;
 
 namespace admin
 {
@@ -32,6 +34,16 @@ namespace admin
 
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+
+            // 获取appsettings.json配置信息
+            var config = new ConfigurationBuilder()
+                            .SetBasePath(System.IO.Directory.GetCurrentDirectory())
+                            .AddJsonFile("appsettings.json")
+                            .Build();
+            // 获取数据库连接字符串
+            string conn = config.GetConnectionString("SqlConn");
+            services.AddDbContext<AdminContext>
+                (options => options.UseSqlServer(conn));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
