@@ -1,0 +1,13 @@
+﻿################################################################################
+# 此 .gitignore 文件已由 Microsoft(R) Visual Studio 自动创建。
+################################################################################
+
+/admin/.vs/admin/v15
+/admin/admin/obj
+/admin/admin/bin/Debug/netcoreapp2.2/admin.Views.pdb
+/admin/admin/bin/Debug/netcoreapp2.2/admin.Views.dll
+/admin/admin/bin/Debug/netcoreapp2.2/admin.runtimeconfig.json
+/admin/admin/bin/Debug/netcoreapp2.2/admin.runtimeconfig.dev.json
+/admin/admin/bin/Debug/netcoreapp2.2/admin.pdb
+/admin/admin/bin/Debug/netcoreapp2.2/admin.dll
+/admin/admin/bin/Debug/netcoreapp2.2/admin.deps.json
