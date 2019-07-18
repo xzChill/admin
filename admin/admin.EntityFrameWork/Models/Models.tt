@@ -1,0 +1,66 @@
+﻿<#@ template debug="true" hostspecific="True" language="C#" #>
+<#@ output extension=".cs" #>
+
+//导入命名空间组件
+<#@ assembly name="System.Data" #>
+<#@ assembly name="System.xml" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="System.Data.SqlClient" #>
+<#@ import namespace="System.Data" #>
+<#@ assembly name="System.Core.dll" #>
+<#@ assembly name="System.Data.DataSetExtensions.dll" #>
+<#@ import namespace="System" #>
+<#@ import namespace="System.Xml" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="System.IO" #>
+
+//引入我们的公共模板文件
+<#@ include file="$(ProjectDir)\\ModelAuto.ttinclude"	#>
+<#@ include file="$(ProjectDir)\\DbHelper.ttinclude"	#>
+
+//定义我们的输出文件夹
+<# 
+    var OutputPath1 = Path.GetDirectoryName(Host.TemplateFile)+"\\work";
+	if (!Directory.Exists(OutputPath1))
+	{
+	    Directory.CreateDirectory(OutputPath1);
+	}
+	 var manager = new Manager(Host, GenerationEnvironment, true) { OutputPath = OutputPath1 }; 
+#>
+
+<#
+	List<string> tables = new List<string> // 需要生成的表，isGenerateAll为false时，按此list中的表进行代码生成
+    {
+        ""
+    };
+	var tableList = Generate.GetTables(true, tables);
+	foreach(var table in tableList)
+	{
+		string tableName = table.ModelTableName;
+		string primaryKey = table.PrimaryKey;
+		List<DbColumn> columnList = table.ColumnList;
+		manager.StartBlock(tableName+".cs");
+
+#>
+using System;
+using System.ComponentModel.DataAnnotations.Schema;
+using GeoAPI.Geometries;
+
+namespace VsursWeb.Models
+{
+    public partial class <#=tableName#>
+    {
+	<#foreach(var column in columnList){#>
+		/// <summary>
+		/// <#=column.Remark#>
+		/// </summary>
+		public <#=column.DataType#> <#=column.ColumnName#> { get; set; }
+<#}#>
+    }
+}
+<#
+		manager.EndBlock(); 
+	}
+	manager.Process(true);
+#>

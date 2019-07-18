@@ -11,29 +11,6 @@
 <div class="layui-layout layui-layout-admin">
     <div class="layui-header">
         <div class="layui-logo">layui 后台布局</div>
-        <!-- 头部区域（可配合layui已有的水平导航） -->
-        @*<ul class="layui-nav layui-layout-left">
-            <li class="layui-nav-item"><a href="">后台管理</a></li>
-            <li class="layui-nav-item layui-this">
-                <a href="javascript:;">产品</a>
-                <dl class="layui-nav-child">
-                    <dd><a href="">选项1</a></dd>
-                    <dd><a href="">选项2</a></dd>
-                    <dd><a href="">选项3</a></dd>
-                </dl>
-            </li>
-            <li class="layui-nav-item"><a href="">大数据</a></li>
-            <li class="layui-nav-item">
-                <a href="javascript:;">解决方案</a>
-                <dl class="layui-nav-child">
-                    <dd><a href="">移动模块</a></dd>
-                    <dd><a href="">后台模版</a></dd>
-                    <dd class="layui-this"><a href="">选中项</a></dd>
-                    <dd><a href="">电商平台</a></dd>
-                </dl>
-            </li>
-            <li class="layui-nav-item"><a href="">社区</a></li>
-        </ul>*@
         <ul class="layui-nav layui-layout-right">
             <li class="layui-nav-item">
                 <a href="javascript:;">
@@ -52,39 +29,32 @@
     <div class="layui-side layui-bg-black">
         <div class="layui-side-scroll">
             <!-- 左侧导航区域（可配合layui已有的垂直导航） -->
-            <ul class="layui-nav layui-nav-tree" lay-filter="test">
+            <ul class="layui-nav layui-nav-tree" lay-filter="sideBar">
                 <li class="layui-nav-item layui-nav-itemed">
-                    <a class="" href="javascript:;">所有商品</a>
+                    <a class="root" href="javascript:;">系统模块</a>
                     <dl class="layui-nav-child">
-                        <dd><a href="javascript:;">列表一</a></dd>
-                        <dd><a href="javascript:;">列表二</a></dd>
-                        <dd><a href="javascript:;">列表三</a></dd>
-                        <dd><a href="">超链接</a></dd>
+                        <dd><a id="user" class="leaf" href="javascript:;">用户管理</a></dd>
+                        <dd><a id="role" class="leaf" href="javascript:;">角色管理</a></dd>
+                        <dd><a id="module" class="leaf" href="javascript:;">模块管理</a></dd>
+                        <dd><a id="power" class="leaf" href="javascript:;">权限管理</a></dd>
                     </dl>
                 </li>
                 <li class="layui-nav-item">
-                    <a href="javascript:;">解决方案</a>
+                    <a href="javascript:;">业务模块</a>
                     <dl class="layui-nav-child">
                         <dd><a href="javascript:;">列表一</a></dd>
                         <dd><a href="javascript:;">列表二</a></dd>
-                        <dd><a href="">超链接</a></dd>
                     </dl>
                 </li>
-                <li class="layui-nav-item"><a href="">云市场</a></li>
-                <li class="layui-nav-item"><a href="">发布商品</a></li>
             </ul>
         </div>
     </div>
 
     <div class="layui-body">
         <!-- 内容主体区域 -->
-        <div class="layui-tab" lay-filter="demo" lay-allowclose="true">
+        <div class="layui-tab" lay-filter="tabContent" lay-allowclose="true">
             <ul class="layui-tab-title">
-                <li class="layui-this first-tab" lay-id="11">首页</li>
-                <li lay-id="22">用户管理</li>
-                <li lay-id="33">权限分配</li>
-                <li lay-id="44">角色管理</li>
-                <li lay-id="55">模块管理</li>
+                <li class="layui-this first-tab" lay-id="home">首页</li>
             </ul>
             <div class="layui-tab-content">
                 <div class="layui-tab-item layui-show">内容1</div>
@@ -107,15 +77,35 @@
     <script>
         //JavaScript代码区域
         layui.use(['element'], function (element) {
+            // 监听导航点击
+            var openTabs = [];
+            element.on('nav(sideBar)', function (elem) {
+
+                var title = $(elem).text();
+                var id = $(elem).attr("id");
+                var isLeaf = $(elem).hasClass("leaf");
+                if (!isLeaf) {
+                    return;
+                }
+                if (openTabs.indexOf(id) == -1) {
+                    openTabs.push(id);
+                    element.tabAdd('tabContent', {
+                        title: title //用于演示
+                        , content: '内容' + (Math.random() * 1000 | 0)
+                        , id: id //实际使用一般是规定好的id，这里以时间戳模拟下
+                    })
+                } else {
+                    element.tabChange('tabContent', id);
+                }
+            });
+            element.on('tabDelete(tabContent)', function (data) {
+                openTabs.splice(data.index - 1, 1);
+            });
             //触发事件
             var active = {
                 tabAdd: function () {
                     //新增一个Tab项
-                    element.tabAdd('demo', {
-                        title: '新选项' + (Math.random() * 1000 | 0) //用于演示
-                        , content: '内容' + (Math.random() * 1000 | 0)
-                        , id: new Date().getTime() //实际使用一般是规定好的id，这里以时间戳模拟下
-                    })
+                    
                 }
                 , tabDelete: function (othis) {
                     //删除指定Tab项

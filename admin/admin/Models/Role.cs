@@ -7,15 +7,14 @@ using System.Threading.Tasks;
 
 namespace admin.Models
 {
-    public class User
+    public class Role
     {
         [Key]
-        public string Username { get; set; }
-        public string Password { get; set; }
-        public string Email { get; set; }
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public string Memo { get; set; }
         public DateTime CreateTime { get; set; }
         [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         public DateTime UpdateTime { get; set; }
-        public string RoleId { get; set; }
     }
 }

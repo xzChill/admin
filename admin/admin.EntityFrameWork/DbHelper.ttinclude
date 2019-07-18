@@ -1,0 +1,223 @@
+﻿<#+
+ class Tables
+    {
+        public string ModelTableName { get; set; }
+        public string ControllerName { get; set; }
+        public string PrimaryKey { get; set; }
+        public List<string> ParamList { get; set; }
+        public List<DbColumn> ColumnList { get; set; }
+        public string ParamList2String { get; set; }
+    }
+
+    class DbColumn
+    {
+        public string ColumnName { get; set; }
+        public string DataType { get; set; }
+        public string Remark { get; set; }
+    }
+
+    class Generate
+    {
+        public static List<Tables> GetTables(bool isGenerateAll, List<string> tables)
+        {
+            //isGenerateAll = true; // 是否生成全部表
+            //tables = new List<string> // 需要生成的表，isGenerateAll为false时，按此list中的表进行代码生成
+            //{
+            //    "VS_SYS_USER"
+            //};
+            SqlConnection conn = new SqlConnection("Server=localhost;Database=adminDB;User ID=sa;Password=sa.123;");
+            conn.Open();
+
+            if (isGenerateAll)// 如果生成全部的表
+            {
+                string[] noGenerate = { "sysdiagrams" };
+                System.Data.DataTable schema = conn.GetSchema("TABLES"); // 获取所有的表
+                tables = new List<string>();
+                foreach (System.Data.DataRow row in schema.Rows)
+                {
+                    if (row["TABLE_TYPE"].ToString() == "BASE TABLE" && !noGenerate.Contains(row["TABLE_NAME"]))
+                    {
+                        tables.Add(row["TABLE_NAME"].ToString());
+                        Console.WriteLine(row["TABLE_NAME"]);
+                    }
+                }
+            }
+
+            List<Tables> tableList = new List<Tables>();
+
+            foreach (string tableName in tables)
+            {
+                string modelTableName = GetModelTableName(tableName); // 实体类对应的表名
+                //Console.WriteLine(modelTableName);
+                string controllerName = GetNonPreTableName(tableName); // 控制器名称
+                //Console.WriteLine(controllerName);
+                string sql = string.Format(@"SELECT name FROM syscolumns WHERE id=Object_Id('{0}') and colid IN(SELECT keyno from sysindexkeys WHERE id=Object_Id('{1}'))", tableName, tableName);
+
+                SqlCommand cmd = new SqlCommand(sql, conn);
+                string primaryKey = cmd.ExecuteScalar().ToString();
+                string primaryKeyHump = ToHump(primaryKey); // 主键名称
+                //Console.WriteLine(primaryKeyHump);
+
+                #region 获取字段列表
+                string fieldSql = string.Format(@"select 
+                                                a.COLUMN_NAME AS column_name,
+                                                a.DATA_TYPE AS data_type,
+                                                b.value AS remark
+                                                from information_schema.COLUMNS as a  left join sys.extended_properties as b 
+                                                on a.TABLE_NAME=OBJECT_NAME(b.major_id) and a.ORDINAL_POSITION=b.minor_id 
+                                                where a.TABLE_NAME='{0}'", tableName);
+
+                // 参数列表
+                List<string> paramList = new List<string>(); // {"string name",...}
+                // 字段信息列表
+                List<DbColumn> colunmList = new List<DbColumn>();
+
+                SqlCommand cmd1 = new SqlCommand(fieldSql, conn);
+                var reader = cmd1.ExecuteReader();
+                while (reader.Read())
+                {
+                    string colunmName = reader["column_name"].ToString();
+                    string colunmNameHump = ToHump(colunmName); // 数据库表字段名，驼峰格式
+
+                    string colunmType = MapCsharpType(reader["data_type"].ToString().ToLower()); // 字段数据格式对应的C#数据格式
+
+                    string colunmRemark = reader["remark"].ToString();
+
+                    paramList.Add(colunmType + " " + colunmNameHump);
+                    colunmList.Add(new DbColumn
+                    {
+                        ColumnName = colunmNameHump,
+                        DataType = colunmType,
+                        Remark = colunmRemark
+                    });
+                }
+                reader.Close();
+                // 参数列表字符串
+                string paramList2String = string.Join(",", paramList.ToArray());
+                //Console.WriteLine(paramList2String);
+                #endregion
+                tableList.Add(new Tables
+                {
+                    ModelTableName = modelTableName,
+                    ControllerName = controllerName,
+                    PrimaryKey = primaryKeyHump,
+                    ParamList = paramList,
+                    ParamList2String = paramList2String,
+                    ColumnList = colunmList
+                });
+            }
+
+            return tableList;
+        }
+
+        /// <summary>
+        /// 获取实体类表名
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <returns></returns>
+        public static string GetModelTableName(string tableName)
+        {
+            return ToHump(tableName);
+        }
+
+        /// <summary>
+        /// 获取去除前缀的表名
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <returns></returns>
+        public static string GetNonPreTableName(string tableName)
+        {
+            List<string> splitList = tableName.Split('_').ToList();
+            if(splitList.Count() > 2)
+            {
+                return ToHump(tableName, "remove", 0, 2); // 控制器名称
+            }
+            else
+            {
+                return ToHump(tableName);
+            }
+        }
+
+        /// <summary>
+        /// AB_CD_EFG 转 AbCdEfg
+        /// </summary>
+        /// <param name="str">原字符串</param>
+        /// <param name="rangeType">"remove" 或者 "get"</param>
+        /// <param name="begin">开始下标</param>
+        /// <param name="count">个数</param>
+        /// <returns></returns>
+        public static string ToHump(string str, string rangeType = "", int begin = 0, int count = 0)
+        {
+            List<string> lowerList = str.ToLower().Split('_').ToList();
+            List<string> upperFirstList = new List<string>();
+            lowerList.ForEach(item => upperFirstList.Add(item.First().ToString().ToUpper() + item.Substring(1))); // 单词首字母大写
+            if (count != 0)
+            {
+                switch (rangeType)
+                {
+                    case "remove":
+                        upperFirstList.RemoveRange(begin, count);
+                        break;
+                    case "get":
+                        upperFirstList = upperFirstList.GetRange(begin, count);
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            string hump = string.Concat(upperFirstList.ToArray());
+
+            return hump;
+        }
+        /// <summary>
+        /// sql数据类型转C#数据类型
+        /// </summary>
+        /// <param name="dbtype">sql数据类型</param>
+        /// <returns></returns>
+        public static string MapCsharpType(string dbtype)
+        {
+            if (string.IsNullOrEmpty(dbtype)) return dbtype;
+            dbtype = dbtype.ToLower();
+            string csharpType = "object";
+            switch (dbtype)
+            {
+                case "bigint": csharpType = "long"; break;
+                case "binary": csharpType = "byte[]"; break;
+                case "bit": csharpType = "bool"; break;
+                case "char": csharpType = "string"; break;
+                case "date": csharpType = "DateTime"; break;
+                case "datetime": csharpType = "DateTime"; break;
+                case "datetime2": csharpType = "DateTime"; break;
+                case "datetimeoffset": csharpType = "DateTimeOffset"; break;
+                case "decimal": csharpType = "decimal"; break;
+                case "float": csharpType = "double"; break;
+                case "image": csharpType = "byte[]"; break;
+                case "int": csharpType = "int"; break;
+                case "money": csharpType = "decimal"; break;
+                case "nchar": csharpType = "string"; break;
+                case "ntext": csharpType = "string"; break;
+                case "numeric": csharpType = "decimal"; break;
+                case "nvarchar": csharpType = "string"; break;
+                case "real": csharpType = "Single"; break;
+                case "smalldatetime": csharpType = "DateTime"; break;
+                case "smallint": csharpType = "short"; break;
+                case "smallmoney": csharpType = "decimal"; break;
+                case "sql_variant": csharpType = "object"; break;
+                case "sysname": csharpType = "object"; break;
+                case "text": csharpType = "string"; break;
+                case "time": csharpType = "TimeSpan"; break;
+                case "timestamp": csharpType = "byte[]"; break;
+                case "tinyint": csharpType = "byte"; break;
+                case "uniqueidentifier": csharpType = "Guid"; break;
+                case "varbinary": csharpType = "byte[]"; break;
+                case "varchar": csharpType = "string"; break;
+                case "xml": csharpType = "string"; break;
+                default: csharpType = "object"; break;
+            }
+            return csharpType;
+        }
+
+
+    }
+#>

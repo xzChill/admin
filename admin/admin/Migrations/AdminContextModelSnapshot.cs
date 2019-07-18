@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using SqlMigration.Models;
+using admin.Models;
 
 namespace admin.Migrations
 {
@@ -28,11 +28,12 @@ namespace admin.Migrations
 
                     b.Property<string>("Email");
 
-                    b.Property<DateTime>("LastTime");
-
                     b.Property<string>("Password");
 
                     b.Property<string>("RoleId");
+
+                    b.Property<DateTime>("UpdateTime")
+                        .ValueGeneratedOnAddOrUpdate();
 
                     b.HasKey("Username");
 

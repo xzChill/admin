@@ -6,10 +6,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace SqlMigration.Models
+namespace admin.Models
 {
     public class AdminContext : DbContext
     {
+        public AdminContext() : base() { }
         public AdminContext(DbContextOptions<AdminContext> options)
             : base(options)
         { }
@@ -26,5 +27,6 @@ namespace SqlMigration.Models
         //    optionsBuilder.UseSqlServer(conn);
         //}
         public DbSet<User> User { get; set; }
+        public DbSet<Role> Role { get; set; }
     }
 }

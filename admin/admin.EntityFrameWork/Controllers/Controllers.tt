@@ -1,0 +1,251 @@
+﻿<#@ template debug="true" hostspecific="True" language="C#" #>
+<#@ output extension=".cs" #>
+
+//导入命名空间组件
+<#@ assembly name="System.Data" #>
+<#@ assembly name="System.xml" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="System.Data.SqlClient" #>
+<#@ import namespace="System.Data" #>
+<#@ assembly name="System.Core.dll" #>
+<#@ assembly name="System.Data.DataSetExtensions.dll" #>
+<#@ import namespace="System" #>
+<#@ import namespace="System.Xml" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="System.IO" #>
+
+//引入我们的公共模板文件
+<#@ include file="$(ProjectDir)\\ModelAuto.ttinclude"	#>
+<#@ include file="$(ProjectDir)\\DbHelper.ttinclude"	#>
+
+//定义我们的输出文件夹
+<# 
+    var OutputPath1 = Path.GetDirectoryName(Host.TemplateFile)+"\\work";
+	if (!Directory.Exists(OutputPath1))
+	{
+	    Directory.CreateDirectory(OutputPath1);
+	}
+	 var manager = new Manager(Host, GenerationEnvironment, true) { OutputPath = OutputPath1 }; 
+#>
+
+<#
+	List<string> tables = new List<string> // 需要生成的表，isGenerateAll为false时，按此list中的表进行代码生成
+    {
+        "VS_DATA_LPK_TYPE"
+    };
+	var tableList = Generate.GetTables(true, tables);
+	foreach(var table in tableList)
+	{
+		string tableName = table.ModelTableName;
+		string controllerName = table.ControllerName;
+        string Service = controllerName + "Service";
+        string service = Service.First().ToString().ToLower() + Service.Substring(1);
+        string _service = "_" + Service.First().ToString().ToLower() + Service.Substring(1);
+		string primaryKey = table.PrimaryKey;
+		List<DbColumn> columnList = table.ColumnList;
+		manager.StartBlock(controllerName+"Controller"+".cs");
+#>
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Vsurs.Lisence.Web.Services;
+using Vsurs.Lisence.Web.Models;
+using VsursWeb.Common;
+
+namespace Vsurs.Lisence.Web.API.Controllers
+{
+	/// <summary>
+	/// <#=controllerName#>操作类
+	/// </summary>
+    [EnableCors("cors")]
+    [Route("api/[controller]")]
+    //[Authorize("Permission")]
+	public class <#=controllerName#>Controller : BaseController
+    {
+		//readonly PermissionRequirement _requirement;
+		//readonly string _currUserAccount;
+        //readonly string _currUserRole;
+		readonly <#=Service#> <#=_service#>;
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="requirement"></param>
+        public <#=controllerName#>Controller(/*PermissionRequirement requirement,*/ <#=Service#> <#=service#>)
+        {
+            _controllerName = "<#=controllerName#>";
+            //_requirement = requirement;
+			//_currUserAccount = _requirement.CurrUserAccount;
+            //_currUserRole = _requirement.CurrUserRole;
+            <#=_service#> = <#=service#>;
+        }
+        /// <summary>
+        /// 请求<#=tableName#>所有信息
+        /// </summary>
+        /// <param name="pageIndex"></param>
+        /// <param name="pageSize"></param>
+        /// <param name="isLikeQuery"> 是否模糊查询，默认为否</param>
+        /// <param name="querys">过滤条件,SName=string</param>
+        /// <returns></returns>
+        [HttpGet]
+        public OkObjectResult Get(int pageIndex = 1, int pageSize = 20, bool isLikeQuery = false, string querys = "")
+        {
+            List<<#=tableName#>> pList = <#=_service#>.Query(
+                d => Filter(d, isLikeQuery, querys),
+                pageIndex,
+                pageSize,
+                out int totalCount
+            );
+
+            return Ok(Success(OperateType.Get, data: new
+            {
+                total = totalCount,
+                pageRow = pList.Count(),
+                rows = pList.ToArray()
+            }));
+        }
+
+		/// <summary>
+        /// 条件过滤
+        /// </summary>
+        /// <param name="instance"></param>
+        /// <param name="isLikeQuery"></param>
+        /// <param name="querys"></param>
+        /// <returns></returns>
+        private bool Filter(<#=tableName#> instance, bool isLikeQuery, string querys)
+        {
+            bool result = true;
+            if (string.IsNullOrEmpty(querys))
+            {
+                return result;
+            }
+            var queryStrs = querys.Split(",").ToList();
+            queryStrs.ForEach(queryStr => {
+                var query = queryStr.Split("=");
+                if(query.Length == 2)
+                {
+                    var key = query[0];
+                    var value = query[1];
+                    if (string.IsNullOrEmpty(value))
+                    {
+                        return;
+                    }
+                    if (isLikeQuery)
+                    {
+                        switch (key) 
+                        {
+                        <#
+                        foreach(var col in columnList)
+                        {#>
+                            //case "<#=col.ColumnName#>":
+                            //result = result && instance.<#=col.ColumnName#>.Contains(value);
+                            //break;
+                        <#}
+                        #>
+                            default:
+                                break;
+                        }
+                    }else
+                    {
+                        switch (key) 
+                        {
+                        <#
+                        foreach(var col in columnList)
+                        {#>
+                            //case "<#=col.ColumnName#>":
+                            //result = result && instance.<#=col.ColumnName#> == value;
+                            //break;
+                        <#}
+                        #>
+                            default:
+                                break;
+                        }
+                    }
+                    
+                }
+            });
+
+            return result;
+        }
+
+		/// <summary>
+        /// 新增<#=tableName#>信息
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost]
+        public OkObjectResult Post(<#=table.ParamList2String#>)
+        {
+			var entity = new <#=tableName#>
+            {
+                <#
+                foreach(var col in columnList)
+                {#>
+                <#=col.ColumnName#> = <#=col.ColumnName#>,
+              <#}
+                #>
+            };
+            var message = <#=_service#>.Add(entity);// 添加数据
+
+            return Ok(ServicesMes(OperateType.Save, message));
+        }
+
+        /// <summary>
+        /// 修改<#=tableName#>信息
+        /// </summary>
+        /// <returns></returns>
+        [HttpPut]
+        public OkObjectResult Put(<#=table.ParamList2String#>)
+        {
+            if (string.IsNullOrEmpty(<#=primaryKey#>))
+            {
+                return Ok(Fail(OperateType.Edit, "id无效"));
+            }
+            <#=tableName#> pExist = <#=_service#>.QueryByID(<#=primaryKey#>);
+
+            if (pExist == null)
+            {
+                return Ok(Fail(OperateType.Edit,"数据不存在"));
+				
+            }
+
+          <#foreach(var col in table.ColumnList)
+            {#>
+            pExist.<#=col.ColumnName#> = <#=col.ColumnName#>;
+          <#}#>
+            var message = <#=_service#>.Update(pExist);
+
+            return Ok(ServicesMes(OperateType.Edit, message));
+        }
+
+		/// <summary>
+        /// 删除<#=tableName#>信息
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpDelete]
+        public OkObjectResult Delete(string id = "")
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                return Ok(Fail(OperateType.Delete, "Id无效"));
+            }
+            <#=tableName#> pExist = <#=_service#>.QueryByID(id);
+            
+            if (pExist == null)
+            {
+                return Ok(Fail(OperateType.Delete,"数据不存在"));
+                
+            }
+            var message = <#=_service#>.Delete(pExist);
+            return Ok(ServicesMes(OperateType.Delete, message));
+        }
+	}
+}
+<#
+		manager.EndBlock(); 
+	}
+	manager.Process(true);
+#>

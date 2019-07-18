@@ -11,3 +11,5 @@
 /admin/admin/bin/Debug/netcoreapp2.2/admin.pdb
 /admin/admin/bin/Debug/netcoreapp2.2/admin.dll
 /admin/admin/bin/Debug/netcoreapp2.2/admin.deps.json
+/admin/admin.EntityFrameWork/bin/Debug/netcoreapp2.2
+/admin/admin.EntityFrameWork/obj

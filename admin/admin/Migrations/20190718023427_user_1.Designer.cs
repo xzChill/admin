@@ -10,8 +10,8 @@ using admin.Models;
 namespace admin.Migrations
 {
     [DbContext(typeof(AdminContext))]
-    [Migration("20190717120531_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20190718023427_user_1")]
+    partial class user_1
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -30,11 +30,12 @@ namespace admin.Migrations
 
                     b.Property<string>("Email");
 
-                    b.Property<DateTime>("LastTime");
-
                     b.Property<string>("Password");
 
                     b.Property<string>("RoleId");
+
+                    b.Property<DateTime>("UpdateTime")
+                        .ValueGeneratedOnAddOrUpdate();
 
                     b.HasKey("Username");
 
