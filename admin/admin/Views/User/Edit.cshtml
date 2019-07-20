@@ -1,0 +1,72 @@
+﻿
+@{
+    ViewData["Title"] = "Edit";
+    Layout = "_EditLayout";
+}
+
+<form class="layui-form" action="" lay-filter="edit">
+    <div class="layui-form-item">
+        <label class="layui-form-label">角色</label>
+        <div class="layui-input-inline">
+            <select name="roleId" lay-verify="required">
+                <option value=""></option>
+                <option value="0">北京</option>
+                <option value="1">上海</option>
+                <option value="2">广州</option>
+                <option value="3">深圳</option>
+                <option value="4">杭州</option>
+            </select>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">邮箱</label>
+        <div class="layui-input-inline">
+            <input type="text" name="email" required lay-verify="required" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div style="margin-left:50%; transform: translateX(-50%);">
+        <button type="button" class="layui-btn" lay-submit lay-filter="edit">确定</button>
+        <button type="button" class="layui-btn" id="cancel">取消</button>
+    </div>
+</form>
+
+@section Scripts{
+    <script>
+        //Demo
+        layui.use('form', function (form) {
+            var $ = layui.jquery;
+            $.get('/api/user/Single?username=' + '@ViewBag.username', function (res) {
+                if (res.status == 0) {
+                    window.parent.frameMsg(res.msg);
+                    window.parent.reloadTable();
+                    closeSelf();
+                }
+                // 表单初始赋值
+                form.val("edit", {
+                    "roleId": res.data.roleId
+                    , "email": res.data.email
+                })
+            });
+
+            //监听提交
+            form.on('submit(edit)', function (data) {
+                data.field.username = '@ViewBag.username';
+                $.ajax({
+                    url: "/api/user",
+                    type: "put",
+                    data: data.field,
+                    success: function (res) {
+                        window.parent.frameMsg(res.msg);
+                        window.parent.reloadTable();
+                        closeSelf();
+                    }
+                });
+                return false;
+            });
+            $("#cancel").click(function () {
+                closeSelf();
+            });
+        });
+    </script>
+}
+

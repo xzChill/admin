@@ -14,7 +14,6 @@ namespace admin.Models
         public string Name { get; set; }
         public string Memo { get; set; }
         public DateTime CreateTime { get; set; }
-        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         public DateTime UpdateTime { get; set; }
     }
 }

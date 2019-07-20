@@ -32,6 +32,17 @@ namespace admin
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
+            //配置跨域处理
+            services.AddCors(options =>
+            {
+                options.AddPolicy("cors", builder =>
+                {
+                    builder.WithOrigins("*") //允许指定域名访问
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .AllowCredentials();//指定处理cookie
+                });
+            });
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 

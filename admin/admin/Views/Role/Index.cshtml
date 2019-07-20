@@ -24,18 +24,14 @@
             var $ = layui.jquery;
             table.render({
                 elem: '#table'
-                , url: '/api/user'
+                , url: '/api/role'
                 , toolbar: '#toolbarDemo'
-                , title: '用户数据表'
+                , title: '角色表'
                 , cols: [[
                     { type: 'checkbox', fixed: 'left' }
-                    , { field: 'username', title: '用户名', width: 120 }
-                    , {
-                        field: 'email', title: '邮箱', width: 150, edit: 'text', templet: function (res) {
-                            return '<em>' + res.email + '</em>'
-                        }
-                    }
-                    , { field: 'roleName', title: '角色', width: 120 }
+                    , { field: 'id', title: 'id', hide: true, width: 120 }
+                    , { field: 'name', title: '角色名', width: 120 }
+                    , { field: 'memo', title: '描述', width: 120 }
                     , { field: 'createTime', title: '加入时间', width: 120 }
                     , { fixed: 'right', title: '操作', toolbar: '#barDemo', width: 150 }
                 ]]
@@ -50,7 +46,7 @@
                 }
                 , response: {
                     statusCode: 1 //规定成功的状态码，默认：0
-                } 
+                }
             });
 
             //头工具栏事件
@@ -61,8 +57,8 @@
                         layer.open({
                             type: 2,
                             area: ['450px', '400px'],
-                            content: '/user/create' //这里content是一个URL，如果你不想让iframe出现滚动条，你还可以content: ['http://sentsin.com', 'no']
-                        }); 
+                            content: '/role/create' //这里content是一个URL，如果你不想让iframe出现滚动条，你还可以content: ['http://sentsin.com', 'no']
+                        });
                         break;
                     case 'batchDelete':
                         var data = checkStatus.data;
@@ -78,25 +74,24 @@
                 if (obj.event === 'del') {
                     layer.confirm('真的删除行么', function (index) {
                         $.ajax({
-                            url: "/api/user/" + data.username,
+                            url: "/api/role/" + data.id,
                             type: "delete",
                             success: function (res) {
                                 frameMsg(res.msg);
                                 if (res.status == 1) {
                                     obj.del();
                                 }
-                                reloadTable();
                             }
                         });
-                        
+
                         layer.close(index);
                     });
                 } else if (obj.event === 'edit') {
                     layer.open({
                         type: 2,
                         area: ['450px', '400px'],
-                        content: '/user/edit?username=' + data.username //这里content是一个URL，如果你不想让iframe出现滚动条，你还可以content: ['http://sentsin.com', 'no']
-                    }); 
+                        content: '/role/edit?id=' + data.id //这里content是一个URL，如果你不想让iframe出现滚动条，你还可以content: ['http://sentsin.com', 'no']
+                    });
                 }
             });
         });

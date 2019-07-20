@@ -14,7 +14,6 @@ namespace admin.Models
         public string Password { get; set; }
         public string Email { get; set; }
         public DateTime CreateTime { get; set; }
-        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         public DateTime UpdateTime { get; set; }
         public string RoleId { get; set; }
     }

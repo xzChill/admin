@@ -7,9 +7,11 @@ using Microsoft.AspNetCore.Mvc;
 using admin.Models;
 using admin.Services;
 using admin.Common;
+using Microsoft.AspNetCore.Cors;
 
 namespace admin.Api
 {
+    [EnableCors("cors")]
     [Route("api/[controller]")]
     public class RoleController : ControllerBase
     {
@@ -62,6 +64,7 @@ namespace admin.Api
                 Name = Name,
                 Memo = Memo,
                 CreateTime = DateTime.Now.ToLocalTime(),
+                UpdateTime = DateTime.Now.ToLocalTime()
             };
             string error = "";
             int res = _roleService.TryAdd(out error, entity);
@@ -79,7 +82,7 @@ namespace admin.Api
         /// <param name="Name"></param>
         /// <param name="Memo"></param>
         /// <returns></returns>
-        [HttpPut("{id}")]
+        [HttpPut]
         public OkObjectResult Put(string id, string Name, string Memo)
         {
             Role exist = _roleService.QueryByID(id);
@@ -89,6 +92,7 @@ namespace admin.Api
             }
             exist.Name = Name;
             exist.Memo = Memo;
+            exist.UpdateTime = DateTime.Now.ToLocalTime();
             string error = "";
             int res = _roleService.TryUpdate(out error, exist);
             if (res == 0)

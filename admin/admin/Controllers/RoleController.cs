@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using admin.Services;
 
 namespace admin.Controllers
 {
-    public class UserController : Controller
+    public class RoleController : Controller
     {
         public IActionResult Index()
         {
@@ -17,9 +16,9 @@ namespace admin.Controllers
         {
             return View();
         }
-        public IActionResult Edit(string username)
+        public IActionResult Edit(string id)
         {
-            ViewBag.username = username;
+            ViewBag.id = id;
             return View();
         }
     }

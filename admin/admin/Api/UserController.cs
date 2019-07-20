@@ -7,9 +7,11 @@ using Microsoft.AspNetCore.Mvc;
 using admin.Models;
 using admin.Services;
 using admin.Common;
+using Microsoft.AspNetCore.Cors;
 
 namespace admin.Api
 {
+    [EnableCors("cors")]
     [Route("api/[controller]")]
     public class UserController : ControllerBase
     {
@@ -28,7 +30,16 @@ namespace admin.Api
         public OkObjectResult Get()
         {
             var list = _userService.Query();
-            return JsonRes.Success(list.ToArray());
+            var roleList = _roleService.Query();
+            return JsonRes.Success(from p in list
+                                   select new
+                                   {
+                                       p.Username,
+                                       p.Email,
+                                       p.RoleId,
+                                       roleName = roleList.Where(d => d.Id == p.RoleId).FirstOrDefault().Name,
+                                       p.CreateTime
+                                   });
         }
 
         /// <summary>
@@ -65,7 +76,8 @@ namespace admin.Api
                 Password = Password,
                 Email = Email,
                 RoleId = RoleId,
-                CreateTime = DateTime.Now.ToLocalTime()
+                CreateTime = DateTime.Now.ToLocalTime(),
+                UpdateTime = DateTime.Now.ToLocalTime()
             };
             string error = "";
             int res = _userService.TryAdd(out error, entity);
@@ -82,7 +94,7 @@ namespace admin.Api
         /// <param name="Username"></param>
         /// <param name="Email"></param>
         /// <param name="RoleId"></param>
-        [HttpPut("{Username}")]
+        [HttpPut]
         public OkObjectResult Put(string Username, string Email, string RoleId)
         {
             User exist = _userService.QueryByID(Username);
@@ -92,6 +104,7 @@ namespace admin.Api
             }
             exist.Email = Email;
             exist.RoleId = RoleId;
+            exist.UpdateTime = DateTime.Now.ToLocalTime();
             string error = "";
             int res = _userService.TryUpdate(out error, exist);
             if (res == 0)
