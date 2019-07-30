@@ -28,5 +28,8 @@ namespace admin.Models
         }
         public DbSet<User> User { get; set; }
         public DbSet<Role> Role { get; set; }
+        public DbSet<Module> Module { get; set; }
+        public DbSet<Power> Power { get; set; }
+        public DbSet<ModuleOperate> ModuleOperate { get; set; }
     }
 }

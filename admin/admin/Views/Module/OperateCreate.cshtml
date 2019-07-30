@@ -6,28 +6,21 @@
 
 <form class="layui-form" action="">
     <div class="layui-form-item">
-        <label class="layui-form-label">用户名</label>
+        <label class="layui-form-label">操作名称</label>
         <div class="layui-input-inline">
-            <input type="text" name="username" required lay-verify="required" autocomplete="off" class="layui-input">
+            <input type="text" name="name" required lay-verify="required" autocomplete="off" class="layui-input">
         </div>
     </div>
     <div class="layui-form-item">
-        <label class="layui-form-label">密码</label>
+        <label class="layui-form-label">链接</label>
         <div class="layui-input-inline">
-            <input type="password" name="password" required lay-verify="required" autocomplete="off" class="layui-input">
+            <input type="text" name="link" required lay-verify="required" autocomplete="off" class="layui-input">
         </div>
     </div>
     <div class="layui-form-item">
-        <label class="layui-form-label">角色</label>
+        <label class="layui-form-label">图标</label>
         <div class="layui-input-inline">
-            <select id="roleId" name="roleId" lay-verify="required">
-            </select>
-        </div>
-    </div>
-    <div class="layui-form-item">
-        <label class="layui-form-label">邮箱</label>
-        <div class="layui-input-inline">
-            <input type="text" name="email" required lay-verify="required" autocomplete="off" class="layui-input">
+            <input type="text" name="icon" id="icon" required lay-filter="icon" class="hide">
         </div>
     </div>
     <div style="margin-left:50%; transform: translateX(-50%);">
@@ -39,26 +32,25 @@
 @section Scripts{
     <script>
         //Demo
-        layui.use('form', function (form) {
+        layui.use(['form', 'iconPicker'], function (form, iconPicker) {
             var $ = layui.jquery;
-            // 初始化角色表
-            $.get('/api/role', function (res) {
-                var roles = res.data;
-                var elems = roles.map((value) => {
-                    return `<option value="${value.id}">${value.name}</option>`;
-                });
-                $("#roleId").empty().append(elems.join(""));
-                form.render(); 
+
+            iconPicker.render({
+                // 选择器，推荐使用input
+                elem: '#icon',
+                // 数据类型：fontClass/unicode，推荐使用fontClass
+                type: 'fontClass',
             });
             //监听提交
             form.on('submit(create)', function (data) {
+                data.field.moduleId = '@ViewBag.moduleId'
                 $.ajax({
-                    url: "/api/user",
+                    url: "/api/moduleoperate",
                     type: "post",
                     data: data.field,
                     success: function (res) {
                         window.parent.frameMsg(res.msg);
-                        window.parent.reloadTable();
+                        window.parent.moduleOperate.window.reloadTable();
                         closeSelf();
                     }
                 });
@@ -68,8 +60,8 @@
                 closeSelf();
             });
         });
-        
     </script>
 }
+
 
 

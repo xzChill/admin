@@ -8,3 +8,8 @@ function reloadTable() {
         table.reload('table');
     });
 }
+function layerOpen(options) {
+    layui.use('layer', function (layer) {
+        layer.open(options);
+    })
+}

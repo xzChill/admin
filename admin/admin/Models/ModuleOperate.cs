@@ -3,25 +3,29 @@ using System.ComponentModel.DataAnnotations;
 
 namespace admin.Models
 {
-    public class Role
+    public class ModuleOperate
     {
         [Key]
         public string Id { get; set; }
         /// <summary>
-        /// 角色名称
+        /// 模块操作名称
         /// </summary>
         public string Name { get; set; }
         /// <summary>
-        /// 角色描述
+        /// 模块操作链接
         /// </summary>
-        public string Memo { get; set; }
+        public string Link { get; set; }
         /// <summary>
-        /// 创建时间
+        /// 所属模块
         /// </summary>
-        public DateTime CreateTime { get; set; }
+        public string ModuleId { get; set; }
         /// <summary>
-        /// 更新时间
+        /// 排序
         /// </summary>
-        public DateTime UpdateTime { get; set; }
+        public int Sort { get; set; }
+        /// <summary>
+        /// 图标
+        /// </summary>
+        public string Icon { get; set; }
     }
 }
