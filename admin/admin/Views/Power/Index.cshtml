@@ -32,7 +32,7 @@
 <div class="role-cont">
     <div class="layui-collapse" lay-accordion>
         <div class="layui-colla-item">
-            <h2 class="layui-colla-title">杜甫</h2>
+            <h2 class="layui-colla-title">角色</h2>
             <dl id="roleList" class="layui-colla-content layui-show"></dl>
         </div>
     </div>
@@ -97,16 +97,27 @@
                             elem: '#moduleTree',  //绑定元素
                             data: modules,
                             showCheckbox: true,
-                            showLine: false
+                            showLine: false,
+                            oncheck: function (obj) {
+                                console.log(obj.data); //得到当前点击的节点数据
+                                console.log(obj.checked); //得到当前节点的展开状态：open、close、normal
+                                var data = obj.data;
+                                var checked = obj.checked;
+                                var id = data.id;
+                                if (data.hasOwnProperty("children")) {
+                                    var children = data.children;
+                                    children.forEach((value) => {
+                                        $.post('/api/power/UpdateModuleOp', { roleId: role, ModuleOpId: value.id, operate: checked }, function (res) {
+
+                                        });
+                                    });
+                                } else {
+                                    $.post('/api/power/UpdateModuleOp', { roleId: role, ModuleOpId: id, operate: checked }, function (res) {
+
+                                    });
+                                }
+                            }
                         });
-                        //var elems = modules.map((value) => {
-                        //    if (value.hasPower) {
-                        //        return `<input type="checkbox" name="${value.id}" title="${value.name}" lay-skin="primary" checked>`;
-                        //    }
-                        //    return `<input type="checkbox" name="${value.id}" title="${value.name}" lay-skin="primary">`;
-                        //});
-                        //$("#moduleList").empty().append(elems.join(""));
-                        //form.render(); 
                     });
                 });
             }
