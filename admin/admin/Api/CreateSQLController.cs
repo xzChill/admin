@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using admin.Models;
+using admin.Services;
+using admin.Common;
 
 namespace admin.Api
 {
@@ -14,8 +17,22 @@ namespace admin.Api
     [Route("api/[controller]")]
     public class CreateSQLController : ControllerBase
     {
+        readonly ModuleService _moduleService;
+        readonly UserService _userService;
+        readonly RoleService _roleService;
+        readonly ModuleOperateService _moduleOperateService;
+        readonly PowerService _powerService;
+
+        public CreateSQLController()
+        {
+            _moduleService = new ModuleService();
+            _userService = new UserService();
+            _roleService = new RoleService();
+            _moduleOperateService = new ModuleOperateService();
+            _powerService = new PowerService();
+        }
         [HttpGet]
-        public OkObjectResult Get(string ip,string dbName, string userId, string pwd)
+        public OkObjectResult Get(string ip, string dbName, string userId, string pwd)
         {
             try
             {
@@ -23,7 +40,7 @@ namespace admin.Api
                 SqlConnection conn = new SqlConnection(connStr);
                 conn.Open();
                 //判断数据库是否存在
-                string dbExistSql = "select * From master.dbo.sysdatabases where name='"+ dbName + "'";
+                string dbExistSql = "select * From master.dbo.sysdatabases where name='" + dbName + "'";
                 SqlCommand dbExistCmd = new SqlCommand(dbExistSql, conn);
                 var dbExistReader = dbExistCmd.ExecuteReader();
                 // 如果数据库不存在
@@ -60,6 +77,38 @@ namespace admin.Api
                     e.Message
                 });
             }
+        }
+
+        [HttpGet("InsertData")]
+        public OkObjectResult InsertData()
+        {
+            // 模块数据
+            List<Module> modules = new List<Module>
+            {
+                new Module{Name = "用户管理", Link = "/user", Icon = "layui-icon-username"},
+                new Module{Name = "角色管理", Link = "/role", Icon = "layui-icon-face-smile"},
+                new Module{Name = "模块管理", Link = "/module", Icon = "layui-icon-template-1"},
+                new Module{Name = "权限管理", Link = "/power", Icon = "layui-icon-password"},
+            };
+            List<Module> insertModules = new List<Module>();
+            modules.ForEach((module) =>
+            {
+                var exist = _moduleService.QuerySingle(d => d.Name == module.Name && d.Link == module.Link);
+                if(exist != null)
+                {
+                    return;
+                }
+                module.Id = Guid.NewGuid().ToString();
+                module.Sort = modules.IndexOf(module) + 1;
+                module.IsBase = 1;
+                insertModules.Add(module);
+            });
+            string error;
+            var moduleNum = _moduleService.TryAdd(out error, insertModules.ToArray());
+            return JsonRes.Success(new {
+                moduleNum,
+                error
+            });
         }
     }
 }

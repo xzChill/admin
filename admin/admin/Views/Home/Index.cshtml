@@ -36,18 +36,18 @@
             <ul class="layui-nav layui-nav-tree" lay-filter="sideBar">
                 <li class="layui-nav-item layui-nav-itemed">
                     <a class="root" href="javascript:;">系统模块</a>
-                    <dl class="layui-nav-child">
-                        <dd><a id="user" url="/user" class="leaf" href="javascript:;">用户管理</a></dd>
+                    <dl id="baseModule" class="layui-nav-child">
+                        @*<dd><a id="user" url="/user" class="leaf" href="javascript:;">用户管理</a></dd>
                         <dd><a id="role" url="/role" class="leaf" href="javascript:;">角色管理</a></dd>
                         <dd><a id="module" url="/module" class="leaf" href="javascript:;">模块管理</a></dd>
-                        <dd><a id="power" url="/power" class="leaf" href="javascript:;">权限管理</a></dd>
+                        <dd><a id="power" url="/power" class="leaf" href="javascript:;">权限管理</a></dd>*@
                     </dl>
                 </li>
                 <li class="layui-nav-item">
                     <a href="javascript:;">业务模块</a>
-                    <dl class="layui-nav-child">
-                        <dd><a href="javascript:;">列表一</a></dd>
-                        <dd><a href="javascript:;">列表二</a></dd>
+                    <dl id="businessModule" class="layui-nav-child">
+                        @*<dd><a href="javascript:;">列表一</a></dd>
+                        <dd><a href="javascript:;">列表二</a></dd>*@
                     </dl>
                 </li>
             </ul>
@@ -77,30 +77,49 @@
     <script>
         //JavaScript代码区域
         layui.use(['element'], function (element) {
-            // 监听导航点击
-            var openTabs = [];
-            element.on('nav(sideBar)', function (elem) {
+            var $ = layui.jquery;
+            // 组织展示导航栏
+            $.get('/api/module', function (res) {
+                console.log(res);
+                res.data.forEach((value) => {
+                    if (value.isBase == 1) {
+                        $("#baseModule").append(`<dd><a id="${value.id}" url="${value.link}" class="leaf" href="javascript:;">${value.name}</a></dd>`);
+                    } else {
+                        $("#businessModule").append(`<dd><a id="${value.id}" url="${value.link}" class="leaf" href="javascript:;">${value.name}</a></dd>`);
+                    }
+                });
 
-                var title = $(elem).text();
-                var id = $(elem).attr("id");
-                var url = $(elem).attr("url");
-                var isLeaf = $(elem).hasClass("leaf");
-                if (!isLeaf) {
-                    return;
-                }
-                if (openTabs.indexOf(id) == -1) {
-                    openTabs.push(id);
-                    element.tabAdd('tabContent', {
-                        title: title //用于演示
-                        , content: `<iframe style="width: 100%; min-height: 100%;" scrolling="no" frameborder="no" src="${url}"></iframe>`
-                        , id: id //实际使用一般是规定好的id，这里以时间戳模拟下
-                    })
-                }
-                element.tabChange('tabContent', id);
+                //重新对导航进行渲染
+                element.render('nav');
+                // 监听导航点击
+                var openTabs = [];
+                element.on('nav(sideBar)', function (elem) {
+
+                    var title = $(elem).text();
+                    var id = $(elem).attr("id");
+                    var url = $(elem).attr("url");
+                    var isLeaf = $(elem).hasClass("leaf");
+                    if (!isLeaf) {
+                        return;
+                    }
+                    if (openTabs.indexOf(id) == -1) {
+                        openTabs.push(id);
+                        element.tabAdd('tabContent', {
+                            title: title //用于演示
+                            , content: `<iframe style="width: 100%; min-height: 100%;" scrolling="no" frameborder="no" src="${url}"></iframe>`
+                            , id: id //实际使用一般是规定好的id，这里以时间戳模拟下
+                        })
+                    }
+                    element.tabChange('tabContent', id);
+                });
+                element.on('tabDelete(tabContent)', function (data) {
+                    openTabs.splice(data.index - 1, 1);
+                });
+
             });
-            element.on('tabDelete(tabContent)', function (data) {
-                openTabs.splice(data.index - 1, 1);
-            });
+
+
+           
         });
     </script>
 }
