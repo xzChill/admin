@@ -3,6 +3,7 @@
 ################################################################################
 
 /admin/.vs
+/admin/.vs/config/applicationhost.config
 /admin/admin/obj
 /admin/admin/bin/Debug/netcoreapp2.2/admin.Views.pdb
 /admin/admin/bin/Debug/netcoreapp2.2/admin.Views.dll
@@ -13,3 +14,7 @@
 /admin/admin/bin/Debug/netcoreapp2.2/admin.deps.json
 /admin/admin.EntityFrameWork/bin/Debug/netcoreapp2.2
 /admin/admin.EntityFrameWork/obj
+/Chill.Admin/.vs/Chill.Admin
+/Chill.Admin/Chill.Admin/obj
+/Chill.Admin/Chill.Common/obj
+/Chill.Admin/Chill.DataRepository/obj
